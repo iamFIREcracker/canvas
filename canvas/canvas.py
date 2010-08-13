@@ -2,7 +2,6 @@
 # -*- coding: utf-8 -*-
 
 import cairo
-import gobject
 import gtk
 
 
