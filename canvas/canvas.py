@@ -17,23 +17,30 @@ class Canvas(gobject.GObject):
     __gsignals__ = {
             'delete-event': (gobject.SIGNAL_RUN_FIRST, None, ()),
     }
-    def __init__(self):
+    def __init__(self, do_configure=None, do_draw=None):
         """Constructor.
 
         Initialize the window and pack a drawing area.
+
+        Keywords:
+            do_configure: user callback for the configure event.
+            do_draw: user callback for drawing operations.
         """
         super(Canvas, self).__init__()
 
-        self.width = self.height = 0
-        self.surface = self.context = None
         window = gtk.Window()
-        darea = gtk.DrawingArea()
+        self.darea = gtk.DrawingArea()
+        self.surface = self.context = None
+        if do_configure is not None:
+            self.do_configure = do_configure
+        if do_draw is not None:
+            self.do_draw = do_draw
 
         window.connect('delete-event', self.delete_cb)
-        darea.connect('configure-event', self.configure_cb)
-        darea.connect('expose-event', self.expose_cb)
+        self.darea.connect('configure-event', self.configure_cb)
+        self.darea.connect('expose-event', self.expose_cb)
         
-        window.add(darea)
+        window.add(self.darea)
         window.show_all()
 
     def delete_cb(self, window, event):
@@ -47,11 +54,11 @@ class Canvas(gobject.GObject):
         Is it possible to extend the class and define a do_configure method
         invoked before the end of this.
         """
-        self.width, self.height = darea.window.get_size()
+        width, height = darea.window.get_size()
 
         self.surface = cairo.ImageSurface(cairo.FORMAT_ARGB32,
-                                          self.width,
-                                          self.height)
+                                          width,
+                                          height)
         self.context = cairo.Context(self.surface)
 
         try:
@@ -77,13 +84,10 @@ class Canvas(gobject.GObject):
     def refresh(self):
         """Redraw on the private context and force a refresh of the window.
         """
-        self.draw()
-        self.queue_draw()
+        try:
+            self.do_draw(self)
+            self.darea.queue_draw()
+        except AttributeError:
+            pass
 
         return True
-
-    def draw(self):
-        """Actually draw on the private context
-        """
-        pass
-
