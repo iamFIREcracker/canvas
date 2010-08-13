@@ -5,6 +5,8 @@
 drawing purposes.
 """
 
+from __future__ import division
+
 import cairo
 import gobject
 import gtk
@@ -91,3 +93,52 @@ class Canvas(gobject.GObject):
             pass
 
         return True
+
+
+if __name__ == '__main__':
+    def delete_cb(canvas):
+        """Quit the gtk mainloop.
+        """
+        print '::delete'
+        gtk.main_quit()
+
+    def configure(canvas, darea, event):
+        """Normalize the canvas surface in order to place (0, 0) in the center,
+        and to bound both the axis between -1 and +1.
+        """
+        global ratio
+
+        print '::configure'
+
+        width, height = darea.window.get_size()
+        ratio = width / height
+        context = canvas.context
+
+        context.scale(width * 0.5 / ratio, height / 2)
+        context.translate(ratio, 1)
+
+    def draw(canvas):
+        """Draw a green square on black background.
+        """
+        global ratio
+
+        print '::draw'
+
+        context = canvas.context
+
+        context.set_operator(cairo.OPERATOR_SOURCE)
+        context.set_source_rgb(0, 0, 0)
+        context.rectangle(-ratio, -1, 2 * ratio, 2)
+        context.fill()
+        context.set_source_rgb(0, 1, 0)
+        context.rectangle(-0.5, -0.5, 1, 1)
+        context.fill()
+
+    ratio = 0
+    canvas = Canvas(do_configure=configure, do_draw=draw)
+
+    canvas.connect('delete-event', delete_cb)
+
+    gobject.timeout_add(66, canvas.refresh)
+
+    gtk.main()
