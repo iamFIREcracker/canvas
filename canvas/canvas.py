@@ -95,12 +95,34 @@ class Canvas(gobject.GObject):
         return True
 
 
+def main():
+    """Enter the mainloop.
+
+    Wrapper of gtk module.
+    """
+    gtk.main()
+
+def main_quit():
+    """Quit the mainloop.
+
+    Wrapper of gtk module.
+    """
+    gtk.main_quit()
+
+def timeout_add(time, func, *args, **kwargs):
+    """Schedule a timeout callback.
+
+    Wrapper of the gobject module.
+    """
+    gobject.timeout_add(time, func, *args, **kwargs)
+
+
 if __name__ == '__main__':
     def delete_cb(canvas):
         """Quit the gtk mainloop.
         """
         print '::delete'
-        gtk.main_quit()
+        main_quit()
 
     def configure(canvas, darea, event):
         """Normalize the canvas surface in order to place (0, 0) in the center,
@@ -139,6 +161,6 @@ if __name__ == '__main__':
 
     canvas.connect('delete-event', delete_cb)
 
-    gobject.timeout_add(66, canvas.refresh)
+    timeout_add(66, canvas.refresh)
 
-    gtk.main()
+    main()
