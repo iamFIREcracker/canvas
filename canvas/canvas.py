@@ -6,13 +6,17 @@ drawing purposes.
 """
 
 import cairo
+import gobject
 import gtk
 
 
-class Canvas(gtk.Window):
+class Canvas(gobject.GObject):
     """Window containing a drawing area for drawings.
     """
 
+    __gsignals__ = {
+            'delete-event': (gobject.SIGNAL_RUN_FIRST, None, ()),
+    }
     def __init__(self):
         """Constructor.
 
@@ -22,13 +26,20 @@ class Canvas(gtk.Window):
 
         self.width = self.height = 0
         self.surface = self.context = None
+        window = gtk.Window()
         darea = gtk.DrawingArea()
 
+        window.connect('delete-event', self.delete_cb)
         darea.connect('configure-event', self.configure_cb)
         darea.connect('expose-event', self.expose_cb)
         
-        self.add(darea)
-        self.show_all()
+        window.add(darea)
+        window.show_all()
+
+    def delete_cb(self, window, event):
+        """Propagate the 'delete-event' signal to the user control.
+        """
+        self.emit('delete-event')
 
     def configure_cb(self, darea, event):
         """Create a private surface and its cairo context.
@@ -75,3 +86,4 @@ class Canvas(gtk.Window):
         """Actually draw on the private context
         """
         pass
+
