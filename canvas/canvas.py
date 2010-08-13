@@ -12,14 +12,11 @@ import gobject
 import gtk
 
 
-class Canvas(gobject.GObject):
+class Canvas(object):
     """Window containing a drawing area for drawings.
     """
 
-    __gsignals__ = {
-            'delete-event': (gobject.SIGNAL_RUN_FIRST, None, ()),
-    }
-    def __init__(self, do_configure=None, do_draw=None):
+    def __init__(self, do_delete=None, do_configure=None, do_draw=None):
         """Constructor.
 
         Initialize the window and pack a drawing area.
@@ -33,6 +30,8 @@ class Canvas(gobject.GObject):
         window = gtk.Window()
         self.darea = gtk.DrawingArea()
         self.surface = self.context = None
+        if do_delete is not None:
+            self.do_delete = do_delete
         if do_configure is not None:
             self.do_configure = do_configure
         if do_draw is not None:
@@ -46,9 +45,12 @@ class Canvas(gobject.GObject):
         window.show_all()
 
     def delete_cb(self, window, event):
-        """Propagate the 'delete-event' signal to the user control.
+        """Call the user defined callback if present.
         """
-        self.emit('delete-event')
+        try:
+            self.do_delete(self, window, event)
+        except AttributeError:
+            pass
 
     def configure_cb(self, darea, event):
         """Create a private surface and its cairo context.
@@ -118,7 +120,7 @@ def timeout_add(time, func, *args, **kwargs):
 
 
 if __name__ == '__main__':
-    def delete_cb(canvas):
+    def delete(canvas, window, event):
         """Quit the gtk mainloop.
         """
         print '::delete'
@@ -157,9 +159,7 @@ if __name__ == '__main__':
         context.fill()
 
     ratio = 0
-    canvas = Canvas(do_configure=configure, do_draw=draw)
-
-    canvas.connect('delete-event', delete_cb)
+    canvas = Canvas(do_delete=delete, do_configure=configure, do_draw=draw)
 
     timeout_add(66, canvas.refresh)
 
