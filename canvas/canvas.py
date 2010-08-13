@@ -1,6 +1,10 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 
+"""Module containing a class which simplify the creation of widgets used for
+drawing purposes.
+"""
+
 import cairo
 import gtk
 
